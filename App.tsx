@@ -123,9 +123,15 @@ export default function App() {
           const content = event.target?.result as string;
           const parsed = JSON.parse(content);
           
-          const targetArray = Array.isArray(parsed) ? parsed : parsed.medicines || parsed.data;
+          let targetArray: any = null;
+          if (Array.isArray(parsed)) {
+            targetArray = parsed;
+          } else if (typeof parsed === 'object' && parsed !== null) {
+            // Find any property that contains an array inside the JSON object
+            targetArray = Object.values(parsed).find(val => Array.isArray(val));
+          }
           
-          if (Array.isArray(targetArray)) {
+          if (Array.isArray(targetArray) && targetArray.length > 0) {
             setMedicines(targetArray);
             alert('Backup restored successfully!');
           } else {
@@ -140,7 +146,7 @@ export default function App() {
 
   const filteredMedicines = medicines.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.batchNumber.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.batchNumber && item.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -211,7 +217,7 @@ export default function App() {
                 <p className="text-slate-400">Batch: {item.batchNumber || 'N/A'} | Expiry: <span className="text-emerald-400 font-semibold">{item.expiryDate}</span></p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="font-bold text-slate-200">{item.quantity} {item.unit}</span>
+                <span className="font-bold text-slate-200">{item.quantity} {item.unit || 'tablets'}</span>
                 <button type="button" onClick={() => handleDelete(item.id)} className="text-rose-400 hover:text-rose-300 font-bold px-2 py-1 cursor-pointer">
                   ✕
                 </button>
