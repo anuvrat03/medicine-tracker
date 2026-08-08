@@ -130,8 +130,6 @@ export default function App() {
             const foundArray = Object.values(parsed).find(val => Array.isArray(val));
             if (foundArray) {
               targetArray = foundArray as any[];
-            } else if (parsed.name) {
-              targetArray = [parsed];
             } else {
               targetArray = Object.values(parsed).filter(val => typeof val === 'object' && val !== null);
               if (targetArray.length === 0) {
@@ -153,8 +151,25 @@ export default function App() {
     }
   };
 
+  const getExpiryStatus = (expiryDateStr: string) => {
+    if (!expiryDateStr) return { isExpired: false, text: 'N/Key' };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expDate = new Date(expiryDateStr);
+    expDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = expDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { isExpired: true, text: 'Expired' };
+    } else {
+      return { isExpired: false, text: `${diffDays} days left` };
+    }
+  };
+
   const filteredMedicines = medicines.filter(item => 
-    item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (item.batchNumber && item.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -219,20 +234,32 @@ export default function App() {
         />
 
         <div className="space-y-2">
-          {filteredMedicines.map((item, index) => (
-            <div key={item.id || index} className="p-3 bg-[#0b0f19] border border-slate-800 rounded-lg flex justify-between items-center text-xs">
-              <div>
-                <p className="font-bold text-white text-sm">{item.name || 'Unnamed Medicine'}</p>
-                <p className="text-slate-400">Batch: {item.batchNumber || 'N/A'} | Expiry: <span className="text-emerald-400 font-semibold">{item.expiryDate || 'N/A'}</span></p>
+          {filteredMedicines.map((item, index) => {
+            const status = getExpiryStatus(item.expiryDate);
+            return (
+              <div key={item.id || index} className="p-3 bg-[#0b0f19] border border-slate-800 rounded-lg flex justify-between items-center text-xs">
+                <div>
+                  <p className="font-bold text-white text-sm">{item.name || 'Unnamed Medicine'}</p>
+                  <p className="text-slate-400">
+                    Batch: {item.batchNumber || 'N/A'} | Expiry: <span className="text-emerald-400 font-semibold">{item.expiryDate || 'N/A'}</span>
+                  </p>
+                  <p className="mt-0.5">
+                    {status.isExpired ? (
+                      <span className="text-rose-400 font-bold bg-rose-950/50 px-1.5 py-0.5 rounded border border-rose-900/50">❌ Expired</span>
+                    ) : (
+                      <span className="text-emerald-400 font-semibold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/40">{status.text}</span>
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-slate-200">{item.quantity || 1} {item.unit || 'tablets'}</span>
+                  <button type="button" onClick={() => handleDelete(item.id || index.toString())} className="text-rose-400 hover:text-rose-300 font-bold px-2 py-1 cursor-pointer" title="Delete item">
+                    ✕
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-slate-200">{item.quantity || 1} {item.unit || 'tablets'}</span>
-                <button type="button" onClick={() => handleDelete(item.id || index.toString())} className="text-rose-400 hover:text-rose-300 font-bold px-2 py-1 cursor-pointer">
-                  ✕
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {filteredMedicines.length === 0 && (
             <p className="text-center text-slate-500 py-4 text-xs">No matching medicines found.</p>
           )}
