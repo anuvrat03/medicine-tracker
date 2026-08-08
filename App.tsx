@@ -25,18 +25,6 @@ const INITIAL_SAMPLES: Medicine[] = [
     unit: 'tablets',
     location: 'Medicine Cabinet',
     notes: 'Take 1 capsule thrice daily after meals'
-  },
-  {
-    id: '2',
-    name: 'Ibuprofen 400mg',
-    expiryDate: '2027-11-15',
-    batchNumber: 'IB-44901',
-    dosage: '400mg',
-    category: 'Pain Relief',
-    quantity: 8,
-    unit: 'tablets',
-    location: 'First Aid Kit',
-    notes: 'For pain or fever'
   }
 ];
 
@@ -71,8 +59,6 @@ export default function App() {
       console.error(e);
     }
   }, [medicines]);
-
-  const today = new Date().toISOString().split('T')[0];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -122,7 +108,7 @@ export default function App() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(medicines, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `medicine_backup_${today}.json`);
+    downloadAnchor.setAttribute("download", `medicine_backup.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -132,15 +118,22 @@ export default function App() {
     const fileReader = new FileReader();
     if (e.target.files && e.target.files[0]) {
       fileReader.readAsText(e.target.files[0], "UTF-8");
-      fileReader.onload = (e) => {
+      fileReader.onload = (event) => {
         try {
-          const parsed = JSON.parse(e.target?.result as string);
-          if (Array.isArray(parsed)) {
-            setMedicines(parsed);
+          const content = event.target?.result as string;
+          const parsed = JSON.parse(content);
+          
+          // Handle both raw array or object wrappers if any exist
+          const targetArray = Array.isArray(parsed) ? parsed : parsed.medicines || parsed.data;
+          
+          if (Array.isArray(targetArray)) {
+            setMedicines(targetArray);
             alert('Backup restored successfully!');
+          } else {
+            alert('Could not find a valid medicine list inside this JSON file.');
           }
         } catch (err) {
-          alert('Invalid backup file.');
+          alert('Invalid backup file format.');
         }
       };
     }
@@ -160,12 +153,12 @@ export default function App() {
           <p className="text-xs text-slate-400">Expiry & Stock Manager</p>
         </div>
         <div className="flex gap-2 text-xs">
-          <button type="button" onClick={exportJSON} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded font-semibold">
+          <button type="button" onClick={exportJSON} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded font-semibold cursor-pointer">
             Export JSON
           </button>
           <label className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded font-semibold cursor-pointer border border-slate-700">
             Import JSON
-            <input type="file" accept=".json" onChange={importJSON} className="hidden" />
+            <input type="file" accept=".json,application/json" onChange={importJSON} className="hidden" />
           </label>
         </div>
       </div>
@@ -196,7 +189,7 @@ export default function App() {
           </div>
         </div>
 
-        <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2 rounded transition">
+        <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2 rounded transition cursor-pointer">
           Save Medicine
         </button>
       </form>
@@ -220,12 +213,15 @@ export default function App() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-bold text-slate-200">{item.quantity} {item.unit}</span>
-                <button type="button" onClick={() => handleDelete(item.id)} className="text-rose-400 hover:text-rose-300 font-bold px-2 py-1">
+                <button type="button" onClick={() => handleDelete(item.id)} className="text-rose-400 hover:text-rose-300 font-bold px-2 py-1 cursor-pointer">
                   ✕
                 </button>
               </div>
             </div>
           ))}
+          {filteredMedicines.length === 0 && (
+            <p className="text-center text-slate-500 py-4 text-xs">No matching medicines found.</p>
+          )}
         </div>
       </div>
     </div>
