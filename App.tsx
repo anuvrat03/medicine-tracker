@@ -160,7 +160,7 @@ export default function App() {
           <p className="text-xs text-slate-400">Expiry & Stock Manager</p>
         </div>
         <div className="flex gap-2 text-xs">
-          <button onClick={exportJSON} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded font-semibold">
+          <button type="button" onClick={exportJSON} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded font-semibold">
             Export JSON
           </button>
           <label className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded font-semibold cursor-pointer border border-slate-700">
@@ -220,7 +220,7 @@ export default function App() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-bold text-slate-200">{item.quantity} {item.unit}</span>
-                <button onClick={() => handleDelete(item.id)} className="text-rose-400 hover:text-rose-300 font-bold px-2 py-1">
+                <button type="button" onClick={() => handleDelete(item.id)} className="text-rose-400 hover:text-rose-300 font-bold px-2 py-1">
                   ✕
                 </button>
               </div>
