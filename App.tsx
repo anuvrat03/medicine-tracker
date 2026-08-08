@@ -123,7 +123,6 @@ export default function App() {
           const content = event.target?.result as string;
           const parsed = JSON.parse(content);
           
-          // Handle both raw array or object wrappers if any exist
           const targetArray = Array.isArray(parsed) ? parsed : parsed.medicines || parsed.data;
           
           if (Array.isArray(targetArray)) {
